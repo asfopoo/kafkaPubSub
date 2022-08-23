@@ -103,8 +103,8 @@ const logMessage = (counter, consumerName, topic, partition, message) => {
     }
   );
   const messageToSocket = `received a new message number: ${counter} on ${consumerName}`;
-  console.log('trying to get socket connection...');
-  sendSocketMessage(messageToSocket);
+  // console.log('trying to get socket connection...');
+  // sendSocketMessage(messageToSocket);
 };
 
 processConsumer();

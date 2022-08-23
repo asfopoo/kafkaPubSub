@@ -1,5 +1,5 @@
 # kafkaPubSub
-pub sub model using kafka and docker
+pub sub model
 
 first run the kafka instance
 

@@ -1,7 +1,7 @@
 # kafkaPubSub
 pub sub model
 
-first run the kafka instance
+first run the kafka instance found here https://github.com/asfopoo/kafkaDocker/tree/master
 
 in another terminal run node createTopic.js to create a topic
 

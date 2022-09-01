@@ -1,36 +1,38 @@
 var express = require("express");
-var express_graphql = require("express-graphql").graphqlHTTP;
+const { ApolloServer } = require('apollo-server');
 
-const schema = require("./schema");
+const typeDefs = require("./schema");
 const resolvers = require("./resolvers");
 const processConsumer = require("./consumer");
 
-var root = {
-  course: resolvers.exports.getCourse,
-  courses: resolvers.exports.getCourses,
-  updateCourseTopic: resolvers.exports.updateCourseTopic, // rename me
-  createNewTopic: resolvers.exports.createNewTopic,
-  coarseUpdated: resolvers.exports.coarseUpdated,
-};
-
-console.log('starting consumer...');
-processConsumer();
-
-// Create an express server and a GraphQL endpoint
-var app = express();
-app.use(
-  "/graphql",
-  express_graphql({
-    schema: schema,
-    rootValue: root,
-    graphiql: true,
-  })
-);
-app.listen(4001, () =>
-  console.log(
-    "Starting Server On localhost:4001/graphql ...."
-  )
-);
+const {
+    ApolloServerPluginLandingPageLocalDefault
+  } = require('apollo-server-core');
+  
+  // The ApolloServer constructor requires two parameters: your schema
+  // definition and your set of resolvers.
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    csrfPrevention: true,
+    cache: 'bounded',
+    /**
+     * These are our recommended settings for using AS;
+     * they aren't the defaults in AS3 for backwards-compatibility reasons but
+     * will be the defaults in AS4. For production environments, use
+     * ApolloServerPluginLandingPageProductionDefault instead.
+    **/
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
+  });
+  
+  // The `listen` method launches a web server.
+  server.listen().then(({ url }) => {
+    console.log(`🚀  Server listening at ${url}`);
+    console.log('starting consumer...');
+    processConsumer();
+  });
 
 
 

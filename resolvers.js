@@ -1,6 +1,7 @@
 const coursesData = require("./courseData");
 const createTopic = require("./createTopic");
 const processProducer = require("./producer");
+const pubsub = require('./pubsub');
 
 const resolvers = {
   Query: {
@@ -57,8 +58,9 @@ const resolvers = {
     },
   },
   Subscription: {
-    coarseUpdated: ({ coarse }) => {
-      return coarse;
+    coarseUpdated: {
+        // listen for a pubsub to publish with label: COARSE_UPDATED
+        subscribe: () => pubsub.asyncIterator(['COARSE_UPDATED'])
     },
   },
 };

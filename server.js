@@ -1,42 +1,75 @@
-var express = require("express");
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require("apollo-server-express");
+const { createServer } = require("http");
+const {
+  ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageLocalDefault,
+} = require("apollo-server-core");
+const express = require('express');
+const { makeExecutableSchema } = require("@graphql-tools/schema");
+const { WebSocketServer } = require("ws");
+const { useServer } = require("graphql-ws/lib/use/ws");
 
 const typeDefs = require("./schema");
 const resolvers = require("./resolvers");
 const processConsumer = require("./consumer");
 
-const {
-    ApolloServerPluginLandingPageLocalDefault
-  } = require('apollo-server-core');
-  
-  // The ApolloServer constructor requires two parameters: your schema
-  // definition and your set of resolvers.
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    csrfPrevention: true,
-    cache: 'bounded',
-    /**
-     * These are our recommended settings for using AS;
-     * they aren't the defaults in AS3 for backwards-compatibility reasons but
-     * will be the defaults in AS4. For production environments, use
-     * ApolloServerPluginLandingPageProductionDefault instead.
-    **/
-    plugins: [
-      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-    ],
-  });
-  
-  // The `listen` method launches a web server.
-  server.listen().then(({ url }) => {
-    console.log(`🚀  Server listening at ${url}`);
-    console.log('starting consumer...');
-    processConsumer();
-  });
+// Create the schema, which will be used separately by ApolloServer and
+// the WebSocket server.
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// Create an Express app and HTTP server; we will attach both the WebSocket
+// server and the ApolloServer to this HTTP server.
+const app = express();
+const httpServer = createServer(app);
+
+// Create our WebSocket server using the HTTP server we just set up.
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: "/graphql",
+});
+// Save the returned server's info so we can shutdown this server later
+const serverCleanup = useServer({ schema }, wsServer);
+
+// Set up ApolloServer.
+const server = new ApolloServer({
+  schema,
+  csrfPrevention: true,
+  cache: "bounded",
+  plugins: [
+    // Proper shutdown for the HTTP server.
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // Proper shutdown for the WebSocket server.
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();
+          },
+        };
+      },
+    },
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
+});
+
+const startServerAsync = async () => {
+  await server.start();
+  server.applyMiddleware({ app });
+};
+
+startServerAsync();
 
 
-
-
+const PORT = 4000;
+// Now that our HTTP server is fully set up, we can listen to it.
+httpServer.listen(PORT, () => {
+  console.log(
+    `Server is now running on http://localhost:${PORT}${server.graphqlPath}`
+  );
+  console.log("starting consumer...");
+  processConsumer();
+});
 
 // const WebSocket = require("ws");
 /* const wss = new WebSocket.Server({ host: "0.0.0.0", port: 13000 });
@@ -63,5 +96,5 @@ const sendSocketMessage = (message) => {
 }; */
 
 // const messageToSocket = `received a new message number: ${counter} on ${consumerName}`;
-  // console.log('trying to get socket connection...');
-  // sendSocketMessage(messageToSocket);
+// console.log('trying to get socket connection...');
+// sendSocketMessage(messageToSocket);

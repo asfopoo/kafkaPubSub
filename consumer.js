@@ -5,6 +5,8 @@ const kafka = new Kafka({
   brokers: ["localhost:9092"],
 });
 
+const pubsub = require('./pubsub');
+
 const topicName = "courseUpdate";
 const consumerNumber = process.argv[2] || "1";
 
@@ -30,6 +32,8 @@ const processConsumer = async () => {
         partition,
         message
       );
+      // publish message to graphql subscription
+      pubsub.publish('COARSE_UPDATED', message); 
     },
   });
   /* run more consumers here */

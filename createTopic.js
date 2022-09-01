@@ -5,12 +5,11 @@ const kafka = new Kafka({
     brokers: ['localhost:9092']
 });
 
-const topicName = 'orderCreated';
-
-const process  = async () => {
+// will resolve to true if the topic was created successfully or false if it already exists.
+const createTopic = async (topicName) => {
     const admin = kafka.admin();
     await admin.connect();
-    await admin.createTopics({
+    const topicResponse = await admin.createTopics({
         topics: [{
             topic: topicName,
             numPartitions: 2,
@@ -19,6 +18,7 @@ const process  = async () => {
         ],
 });
     await admin.disconnect();
+    return topicResponse;
 };
 
-process().then(() => console.log('done'));
+module.exports = createTopic;

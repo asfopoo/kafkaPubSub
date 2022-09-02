@@ -1,11 +1,12 @@
 const coursesData = require("./courseData");
 const createTopic = require("./createTopic");
 const processProducer = require("./producer");
-const pubsub = require('./pubsub');
+const pubsub = require("./pubsub");
+const processConsumer = require("./consumer");
 
 const resolvers = {
   Query: {
-    getCourse: () => {
+    getCourse: (args) => {
       var id = args.id;
       return coursesData.filter((course) => {
         return course.id == id;
@@ -19,7 +20,21 @@ const resolvers = {
     },
   },
   Mutation: {
-    updateCourseTopic: (_, { id, topic }) => {
+    createNewKafkaTopic: (_, { topicName }) => {
+      // create new topic using kafka
+      createTopic(topicName)
+        .then((res) => {
+          console.log(`${topicName} topic created: `, res);
+          console.log("starting consumer...");
+          processConsumer();
+          return { success: true };
+        })
+        .catch((err) => {
+          console.log(err, "err");
+          return { success: false };
+        });
+    },
+    updateCourseSubject: (_, { id, topic }) => {
       // map the courses
       coursesData.map((course) => {
         if (course.id === id) {
@@ -44,23 +59,11 @@ const resolvers = {
 
       return coursesData.filter((course) => course.id === id)[0];
     },
-    createNewTopic: (_, { topicName }) => {
-      // create new topic using kafka
-      createTopic(topicName)
-        .then((res) => {
-          console.log(`${topicName} topic created: `, res);
-          return { success: true };
-        })
-        .catch((err) => {
-          console.log(err, "err");
-          return { success: false };
-        });
-    },
   },
   Subscription: {
     coarseUpdated: {
-        // listen for a pubsub to publish with label: COARSE_UPDATED
-        subscribe: () => pubsub.asyncIterator(['COARSE_UPDATED'])
+      // listen for a pubsub to publish with label: COARSE_UPDATED
+      subscribe: () => pubsub.asyncIterator(["COARSE_UPDATED"]),
     },
   },
 };

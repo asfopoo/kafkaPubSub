@@ -11,7 +11,6 @@ const { useServer } = require("graphql-ws/lib/use/ws");
 
 const typeDefs = require("./schema");
 const resolvers = require("./resolvers");
-const processConsumer = require("./consumer");
 
 // Create the schema, which will be used separately by ApolloServer and
 // the WebSocket server.
@@ -67,34 +66,4 @@ httpServer.listen(PORT, () => {
   console.log(
     `Server is now running on http://localhost:${PORT}${server.graphqlPath}`
   );
-  console.log("starting consumer...");
-  processConsumer();
 });
-
-// const WebSocket = require("ws");
-/* const wss = new WebSocket.Server({ host: "0.0.0.0", port: 13000 });
-
-const sendSocketMessage = (message) => {
-  wss.on("connection", function connection(ws) {
-    console.log("new connection");
-
-    ws.on("message", function incoming(message) {
-      console.log("received: %s", message);
-    });
-
-    ws.on("error", function (e) {
-      console.log("error", e);
-    });
-
-    ws.on("close", function (e) {
-      console.log("close", e);
-    });
-
-    ws.send("connection opened");
-    ws.send(message);
-  });
-}; */
-
-// const messageToSocket = `received a new message number: ${counter} on ${consumerName}`;
-// console.log('trying to get socket connection...');
-// sendSocketMessage(messageToSocket);

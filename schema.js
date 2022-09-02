@@ -6,8 +6,8 @@ const typeDefs = gql`
         getCourses(topic: String): [Course]
     }
     type Mutation {
-        updateCourseTopic(id: Int!, topic: String!): Course
-        createNewTopic(topicName: String!): Success
+        updateCourseSubject(id: Int!, topic: String!): Course
+        createNewKafkaTopic(topicName: String!): Success
     }
     type Subscription {
         coarseUpdated: Course

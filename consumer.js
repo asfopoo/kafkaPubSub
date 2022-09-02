@@ -33,7 +33,7 @@ const processConsumer = async () => {
         message
       );
       // publish message to graphql subscription
-      pubsub.publish('COARSE_UPDATED', message); 
+      pubsub.publish('COARSE_UPDATED', message.value); 
     },
   });
   /* run more consumers here */
